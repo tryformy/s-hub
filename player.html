@@ -1,47 +1,66 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="utf-8">
-<style>
-  * { margin:0; padding:0; overflow:hidden; background:#000; }
-  body, html { width:100%; height:100%; }
-  iframe { width:100%; height:100%; border:none; display:block; }
-</style>
+    <meta charset="utf-8">
+    <style>
+        * { margin:0; padding:0; overflow:hidden; background:#000; }
+        body, html { width:100%; height:100%; pointer-events:none; }
+        #c, iframe, video { width:100%; height:100%; border:none; display:block; pointer-events:auto; }
+    </style>
 </head>
 <body>
 <div id="c"></div>
 <script>
-const p   = new URLSearchParams(location.search);
-const tp  = p.get('tp') || 'dl';
-const dt  = p.get('dt') || '';
-const vol = Math.max(0, Math.min(100, parseInt(p.get('vol')) || 40));
-const st  = Math.floor(parseFloat(p.get('st')) || 0);
-const c   = document.getElementById('c');
+    const p = new URLSearchParams(location.search);
+    const tp = p.get('tp') || 'dl';
+    const dt = p.get('dt') || '';
+    const vol = Math.max(0, Math.min(100, parseInt(p.get('vol')) || 40));
+    const st = Math.floor(parseFloat(p.get('st')) || 0);
+    const c = document.getElementById('c');
 
-if (tp === 'yt') {
-  const tag = document.createElement('script');
-  tag.src = 'https://www.youtube.com/iframe_api';
-  document.head.appendChild(tag);
-  c.innerHTML = '<div id="yt" style="width:100%;height:100vh"></div>';
-  window.onYouTubeIframeAPIReady = () => {
-    new YT.Player('yt', {
-      width:'100%', height:'100%',
-      videoId: dt,
-      playerVars: { autoplay:1, start:st, controls:0, modestbranding:1, rel:0 },
-      events: { onReady: e => e.target.setVolume(vol) }
-    });
-  };
-} else if (tp === 'twl') {
-  c.innerHTML = `<iframe src="https://player.twitch.tv/?channel=${dt}&parent=tryformy.github.io&autoplay=true" allowfullscreen></iframe>`;
-} else if (tp === 'tw') {
-  const h=Math.floor(st/3600), m=Math.floor((st%3600)/60), s=st%60;
-  const t=`${String(h).padStart(2,'0')}h${String(m).padStart(2,'0')}m${String(s).padStart(2,'0')}s`;
-  c.innerHTML = `<iframe src="https://player.twitch.tv/?video=${dt}&parent=tryformy.github.io&autoplay=true&t=${t}" allowfullscreen></iframe>`;
-} else if (tp === 'sc') {
-  c.innerHTML = `<iframe src="https://w.soundcloud.com/player/?url=${encodeURIComponent(dt)}&auto_play=true" allow="autoplay"></iframe>`;
-} else if (tp === 'dr') {
-  c.innerHTML = `<iframe src="${dt}" allowfullscreen allow="autoplay"></iframe>`;
-}
+    if (tp === 'yt') {
+        const tag = document.createElement('script');
+        tag.src = 'https://www.youtube.com/iframe_api';
+        document.head.appendChild(tag);
+        c.innerHTML = '<div id="yt"></div>';
+        
+        window.onYouTubeIframeAPIReady = () => {
+            new YT.Player('yt', {
+                width:'100%', height:'100%',
+                videoId: dt,
+                playerVars: { 
+                    autoplay:1, mute:1, start:st, controls:0, 
+                    modestbranding:1, rel:0, iv_load_policy:3, disablekb:1 
+                },
+                events: { 
+                    onReady: e => {
+                        e.target.playVideo();
+                        // Unmute after interaction window opens
+                        setTimeout(() => { e.target.unMute(); e.target.setVolume(vol); }, 1500);
+                        
+                        // Auto-Skip Ad Loop
+                        setInterval(() => {
+                            const skipBtn = document.querySelector('.ytp-ad-skip-button') || 
+                                            document.querySelector('.ytp-ad-skip-button-modern');
+                            if (skipBtn) skipBtn.click();
+                        }, 500);
+                    }
+                }
+            });
+        };
+    } else if (tp === 'twl' || tp === 'tw') {
+        const isVid = dt.startsWith("v");
+        const id = isVid ? dt : dt;
+        const src = `https://player.twitch.tv/?${isVid ? 'video='+id : 'channel='+id}&parent=localhost&parent=tryformy.github.io&autoplay=true&muted=false`;
+        c.innerHTML = `<iframe src="${src}" allowfullscreen></iframe>`;
+    } else if (tp === 'sc') {
+        c.innerHTML = `<iframe src="https://w.soundcloud.com/player/?url=${encodeURIComponent(dt)}&auto_play=true" allow="autoplay"></iframe>`;
+    } else if (tp === 'dr') {
+        const v = document.createElement('video');
+        v.src = dt; v.autoplay = true; v.controls = false;
+        v.currentTime = st; v.volume = vol/100;
+        c.appendChild(v);
+    }
 </script>
 </body>
 </html>
