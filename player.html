@@ -32,11 +32,11 @@ if (tp === 'yt') {
     });
   };
 } else if (tp === 'twl') {
-  c.innerHTML = `<iframe src="https://player.twitch.tv/?channel=${dt}&parent=YOURNAME.github.io&autoplay=true" allowfullscreen></iframe>`;
+  c.innerHTML = `<iframe src="https://player.twitch.tv/?channel=${dt}&parent=tryformy.github.io&autoplay=true" allowfullscreen></iframe>`;
 } else if (tp === 'tw') {
   const h=Math.floor(st/3600), m=Math.floor((st%3600)/60), s=st%60;
   const t=`${String(h).padStart(2,'0')}h${String(m).padStart(2,'0')}m${String(s).padStart(2,'0')}s`;
-  c.innerHTML = `<iframe src="https://player.twitch.tv/?video=${dt}&parent=YOURNAME.github.io&autoplay=true&t=${t}" allowfullscreen></iframe>`;
+  c.innerHTML = `<iframe src="https://player.twitch.tv/?video=${dt}&parent=tryformy.github.io&autoplay=true&t=${t}" allowfullscreen></iframe>`;
 } else if (tp === 'sc') {
   c.innerHTML = `<iframe src="https://w.soundcloud.com/player/?url=${encodeURIComponent(dt)}&auto_play=true" allow="autoplay"></iframe>`;
 } else if (tp === 'dr') {
