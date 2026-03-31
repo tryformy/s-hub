@@ -5,7 +5,7 @@
 <style>
   * { margin:0; padding:0; overflow:hidden; background:#000; }
   body, html { width:100%; height:100%; }
-  #c, iframe { width:100%; height:100%; border:none; display:block; }
+  iframe { width:100%; height:100%; border:none; display:block; }
 </style>
 </head>
 <body>
@@ -18,67 +18,29 @@ const vol = Math.max(0, Math.min(100, parseInt(p.get('vol')) || 40));
 const st  = Math.floor(parseFloat(p.get('st')) || 0);
 const c   = document.getElementById('c');
 
-let player = null;
-
-// Listen for updates from C# (Seek/Volume/Pause)
-window.addEventListener('message', e => {
-  if (!player) return;
-  if (e.data.type === 'seek') player.seekTo(e.data.time, true);
-  if (e.data.type === 'volume') player.setVolume(e.data.vol);
-  if (e.data.type === 'pause') player.pauseVideo();
-  if (e.data.type === 'resume') player.playVideo();
-});
-
 if (tp === 'yt') {
   const tag = document.createElement('script');
   tag.src = 'https://www.youtube.com/iframe_api';
   document.head.appendChild(tag);
-  
-  c.innerHTML = '<div id="yt"></div>';
-  
+  c.innerHTML = '<div id="yt" style="width:100%;height:100vh"></div>';
   window.onYouTubeIframeAPIReady = () => {
-    player = new YT.Player('yt', {
+    new YT.Player('yt', {
       width:'100%', height:'100%',
       videoId: dt,
-      playerVars: { 
-        autoplay: 1, 
-        start: st, 
-        controls: 0, 
-        modestbranding: 1, 
-        rel: 0,
-        enablejsapi: 1,
-        origin: location.origin 
-      },
-      events: { 
-        onReady: e => {
-          e.target.setVolume(vol);
-          // The "Autoplay Trick": Mute, Play, then Unmute after a tiny delay
-          e.target.mute();
-          e.target.playVideo();
-          setTimeout(() => {
-            e.target.unMute();
-            e.target.setVolume(vol);
-          }, 600);
-        },
-        onStateChange: e => {
-            // If it gets stuck in "Cued" (thumbnail) state, kickstart it
-            if (e.data === 5) e.target.playVideo();
-        }
-      }
+      playerVars: { autoplay:1, start:st, controls:0, modestbranding:1, rel:0 },
+      events: { onReady: e => e.target.setVolume(vol) }
     });
   };
 } else if (tp === 'twl') {
-  // Added 'muted=false' to help Twitch identify intent
-  c.innerHTML = `<iframe src="https://player.twitch.tv/?channel=${dt}&parent=${location.hostname}&autoplay=true&muted=false" allowfullscreen></iframe>`;
+  c.innerHTML = `<iframe src="https://player.twitch.tv/?channel=${dt}&parent=tryformy.github.io&autoplay=true" allowfullscreen></iframe>`;
 } else if (tp === 'tw') {
   const h=Math.floor(st/3600), m=Math.floor((st%3600)/60), s=st%60;
   const t=`${String(h).padStart(2,'0')}h${String(m).padStart(2,'0')}m${String(s).padStart(2,'0')}s`;
-  c.innerHTML = `<iframe src="https://player.twitch.tv/?video=${dt}&parent=${location.hostname}&autoplay=true&t=${t}&muted=false" allowfullscreen></iframe>`;
+  c.innerHTML = `<iframe src="https://player.twitch.tv/?video=${dt}&parent=tryformy.github.io&autoplay=true&t=${t}" allowfullscreen></iframe>`;
 } else if (tp === 'sc') {
   c.innerHTML = `<iframe src="https://w.soundcloud.com/player/?url=${encodeURIComponent(dt)}&auto_play=true" allow="autoplay"></iframe>`;
 } else if (tp === 'dr') {
-  // Direct links often need a raw video tag for best s&box performance
-  c.innerHTML = `<video src="${dt}" autoplay controls style="width:100%;height:100%;"></video>`;
+  c.innerHTML = `<iframe src="${dt}" allowfullscreen allow="autoplay"></iframe>`;
 }
 </script>
 </body>
