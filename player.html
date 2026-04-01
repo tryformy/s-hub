@@ -19,24 +19,35 @@
     const c = document.getElementById('c');
 
     if (tp === 'yt') {
-        // We use the Nadeko Invidious instance for Ad-Free YouTube
-        // 'autoplay=1' starts it, 't=' handles the start time
-        const nadekoUrl = `https://inv.nadeko.net/embed/${dt}?autoplay=1&t=${st}&listen=0`;
+        const tag = document.createElement('script');
+        tag.src = 'https://www.youtube.com/iframe_api';
+        document.head.appendChild(tag);
+        c.innerHTML = '<div id="yt"></div>';
         
-        c.innerHTML = `<iframe id="yt-frame" src="${nadekoUrl}" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
-
-        // Anti-Pause & Volume Sync Logic
-        // Since it's an iframe, we can't always "talk" to it, 
-        // but we can ensure it stays focused and visible.
-        const frame = document.getElementById('yt-frame');
-        
-        // Safety check to force the iframe to stay active
-        setInterval(() => {
-            if (frame && frame.contentWindow) {
-                frame.contentWindow.postMessage('{"event":"command","func":"playVideo"}', '*');
-            }
-        }, 3000);
-
+        window.onYouTubeIframeAPIReady = () => {
+            new YT.Player('yt', {
+                width:'100%', height:'100%',
+                videoId: dt,
+                playerVars: { 
+                    autoplay:1, mute:1, start:st, controls:0, 
+                    modestbranding:1, rel:0, iv_load_policy:3, disablekb:1 
+                },
+                events: { 
+                    onReady: e => {
+                        e.target.playVideo();
+                        // Unmute after interaction window opens
+                        setTimeout(() => { e.target.unMute(); e.target.setVolume(vol); }, 1500);
+                        
+                        // Auto-Skip Ad Loop
+                        setInterval(() => {
+                            const skipBtn = document.querySelector('.ytp-ad-skip-button') || 
+                                            document.querySelector('.ytp-ad-skip-button-modern');
+                            if (skipBtn) skipBtn.click();
+                        }, 500);
+                    }
+                }
+            });
+        };
     } else if (tp === 'twl' || tp === 'tw') {
         const isVid = dt.startsWith("v");
         const id = isVid ? dt : dt;
